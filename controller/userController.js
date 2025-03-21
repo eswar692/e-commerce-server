@@ -13,7 +13,7 @@ const registerUser = async (req, res)=>{
     const emailExist = await User.findOne({email:secureEmail})
     if(emailExist){
         console.log('email exist')
-        return res.status(401).json({message:"email already exist plase try another email"})
+        return res.status(401).json({message:"email already exist please try another email"})
     }
     // all secure filds emty ayithe edi vastundi
     if (!secureName || !secureEmail || !securePassword) {
@@ -21,7 +21,7 @@ const registerUser = async (req, res)=>{
     }
     const maxAge = 1000 *60 *60 *24 // 24 hours
     // jwt ki fun create chesanu
-    const jwtFun = (_id)=>{
+    const jwtFun = (id)=>{
         console.log(process.env.secret_key)
         return (
             
@@ -68,7 +68,7 @@ const loginUser = async (req, res) => {
         }
 
         const maxAge = 1000 * 60 * 60 * 24; // 24 hours
-        const jwtFun = (_id) => jwt.sign({ _id }, process.env.secret_key, { expiresIn: maxAge });
+        const jwtFun = (id) => jwt.sign({ _id }, process.env.secret_key, { expiresIn: maxAge });
 
         return res.status(201).cookie('user_jwt', jwtFun(user._id), {
             maxAge,
@@ -82,4 +82,27 @@ const loginUser = async (req, res) => {
     }
 
 }
-module.exports = {registerUser, loginUser}
+
+const getUser = async (req, res) => {
+    const { userId } = req
+
+    if (!userId) {
+        return res.status(401).json({ message: "User ID Required" });
+    }
+
+    try {
+        const user = await User.findById(userId)
+        if (!user) {
+            return res.status(401).json({ message: "invalid user" });
+        }
+
+        return res.status(201).json({ user });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(501).json({ message: error.message });
+    }
+
+}
+
+module.exports = {registerUser, loginUser, getUser}
