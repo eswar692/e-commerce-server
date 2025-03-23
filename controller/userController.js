@@ -82,4 +82,41 @@ const loginUser = async (req, res) => {
     }
 
 }
-module.exports = {registerUser, loginUser}
+
+// get user details
+const getUser = async()=>{
+    const userId = req.userId;
+    if(!userId) return res.status(401).json({success:false, message:"user Id required"})
+    
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        return res.status(201).json({ success: true, user });
+        
+    } catch (error) {
+        console.error(error)
+        return res.status(501).json({success:false, message:"Internal server error"})
+        
+    }
+}
+
+// logOut controller
+
+const logoutUser = async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        if (!userId) return res.status(400).json({ success: false, message: "User ID not found" });
+        
+
+        res.clearCookie("user_jwt", { httpOnly: true, secure: true, sameSite: 'strict' });
+        res.status(200).json({ success: true, message: "successfully you are logout" });
+    } catch (error) {
+        console.error("Logout error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error try again" });
+    }
+};
+
+module.exports = {registerUser, loginUser, logoutUser, getUser}
