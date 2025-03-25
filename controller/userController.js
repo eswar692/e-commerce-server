@@ -68,7 +68,7 @@ const loginUser = async (req, res) => {
         }
 
         const maxAge = 1000 * 60 * 60 * 24; // 24 hours
-        const jwtFun = (id) => jwt.sign({ _id }, process.env.secret_key, { expiresIn: maxAge });
+        const jwtFun = (_id) => jwt.sign({ _id }, process.env.secret_key, { expiresIn: maxAge });
 
         return res.status(201).cookie('user_jwt', jwtFun(user._id), {
             maxAge,
@@ -83,9 +83,8 @@ const loginUser = async (req, res) => {
 
 }
 
-<<<<<<< HEAD
 // get user details
-const getUser = async()=>{
+const getUser = async(req, res)=>{
     const userId = req.userId;
     if(!userId) return res.status(401).json({success:false, message:"user Id required"})
     
@@ -121,28 +120,4 @@ const logoutUser = async (req, res) => {
 };
 
 module.exports = {registerUser, loginUser, logoutUser, getUser}
-=======
-const getUser = async (req, res) => {
-    const { userId } = req
 
-    if (!userId) {
-        return res.status(401).json({ message: "User ID Required" });
-    }
-
-    try {
-        const user = await User.findById(userId)
-        if (!user) {
-            return res.status(401).json({ message: "invalid user" });
-        }
-
-        return res.status(201).json({ user });
-
-    } catch (error) {
-        console.error(error);
-        return res.status(501).json({ message: error.message });
-    }
-
-}
-
-module.exports = {registerUser, loginUser, getUser}
->>>>>>> d0bd6e27f496b93dbc2b1cd4a9a5156238953fe7
