@@ -1,6 +1,8 @@
 const User = require('../models/User')
 const bcryptjs = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const { sendOTP } = require('../utils/nodeMailer')
+const { connectRedis } = require('../utils/redisClient')
 require('dotenv').config()
 
 const registerUser = async (req, res)=>{
@@ -21,7 +23,7 @@ const registerUser = async (req, res)=>{
     }
     const maxAge = 1000 *60 *60 *24 // 24 hours
     // jwt ki fun create chesanu
-    const jwtFun = (id)=>{
+    const jwtFun = (_id)=>{
         console.log(process.env.secret_key)
         return (
             
@@ -119,5 +121,55 @@ const logoutUser = async (req, res) => {
     }
 };
 
-module.exports = {registerUser, loginUser, logoutUser, getUser}
+// otp controller
+const otpSend = async (req, res) => {
+    // const userId = req.userId;
+    const { email } = req.body;
+    if ( !email) return res.status(401).json({ success: false, message: "User ID and email required" });
+    try {
+        // const user = await User.findById(userId);
+        // if (!user) return res.status(401).json({ success: false, message: "User not found" });
+        const otp = await sendOTP(email);
+        const redis =await connectRedis();
+        redis.set(email, otp, {EX: 600});
+
+        return res.status(201).json({ success: true, message: "OTP sent successfully", otp});
+
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(501).json({ success: false,message:"internal server error"});
+
+    }
+}
+// otp verify controller
+const otpVerify = async (req, res) => {
+    // const userId = req.userId;
+    const { email, otp } = req.body;
+    if ( !email || !otp) return res.status(401).json({ success: false, message: "User ID, email and OTP required" });
+    try {
+        // const user = await User.findById(userId);
+        // if (!user) return res.status(401).json({ success: false, message: "User not found" });
+        const redis = await connectRedis();
+        const storedOtp = await redis.get(email);
+        
+        if (storedOtp !== otp) return res.status(401).json({ success: false, message: "Invalid OTP" });
+        return res.status(201).json({ success: true, message: "OTP verified successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(501).json({ success: false, message:"internal server error" });
+    }
+}
+
+
+
+
+
+module.exports = {  registerUser, 
+                    loginUser,
+                    logoutUser, 
+                    getUser,
+                    otpSend,
+                    otpVerify,
+                };
 

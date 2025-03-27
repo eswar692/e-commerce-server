@@ -2,9 +2,14 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const dotEnv = require('dotenv').config()
-const port = 5000 || process.env.port
+const port =  process.env.port || 5000
 const cors = require('cors');
 const cookieParser = require('cookie-parser')
+const {connectRedis} = require('./utils/redisClient')
+
+connectRedis()
+
+
 app.use(cors({
     origin: 'http://localhost:5173', 
     methods: ['GET', 'POST', 'PUT', 'DELETE'], 
